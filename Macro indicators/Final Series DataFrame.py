@@ -9,4 +9,5 @@ from scipy.stats import zscore
 numeric_cols = df_series.select_dtypes(include=[np.number]).columns
 df[numeric_cols].apply(zscore)
 
+df
 print(df_series)
