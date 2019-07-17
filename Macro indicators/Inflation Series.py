@@ -9,7 +9,7 @@ getdata = FRED()
 
 #fetching CPI
 df_cpi = pd.DataFrame(getdata.fetch("CPIAUCSL"))
-df_cpi = df_cpi['CPIAUCSL'].resample('Q').mean()
+df_cpi = pd.DataFrame(df_cpi["CPIAUCSL"].resample('Q').mean())
 
 #normalizing CPI
 b = df_cpi.values
@@ -40,3 +40,15 @@ d = df_gdpdef.values
 d = d.reshape(-1, 1)
 d_scaled = min_max_scaler.fit_transform(d)
 df_gdpdef_norm = pd.DataFrame(d_scaled, index=df_gdpdef.index, columns=['GDP Deflator Normalized'])
+
+#Merging DataFrames#
+
+df_inf = pd.merge(df_cpi_norm,df_cpigr_norm, on='Date', how='outer')
+
+df_inf = pd.merge(df_inf,df_gdpdef_norm, on='Date', how='outer')
+
+#calculating average inflation
+
+df_inf["inflation"] = df_inf.mean(numeric_only=True, axis=1)
+
+print(df_inf)

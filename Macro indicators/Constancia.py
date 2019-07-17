@@ -66,6 +66,6 @@ df_realgr = pd.merge(df_realgr,df_CFNAI_norm, on='Date', how='outer')
 
 #adding a column with average
 
-df_realgr["average"] = df_realgr.mean(numeric_only = True, axis=1)
+df_realgr["Real Growth"] = df_realgr.mean(numeric_only = True, axis=1)
 
 print(df_realgr)
