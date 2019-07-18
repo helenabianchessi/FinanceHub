@@ -40,8 +40,8 @@ confnorm['CONCCONF Normalized'] = x_scaled
 confnorm = confnorm.drop('CONCCONF Index', axis=1)
 
 #confnorm.info()
-#print(confnorm)
+print(confnorm)
 
-ax = plt.gca()
-confnorm.plot(kind='line', y='CONCCONF Normalized', color='green', ax=ax)
-plt.show()
+#ax = plt.gca()
+#confnorm.plot(kind='line', y='CONCCONF Normalized', color='green', ax=ax)
+#plt.show()
