@@ -86,5 +86,13 @@ volBR.plot(kind='line', y='Titulos Vol. Normalized', color='yellow', ax=ax)
 plt.show()
 
 # Average Volatility
-volBR["Avg Vol US"] = volUS.mean(numeric_only = True, axis=1)
-volUS["Avg Vol BR"] = volBR.mean(numeric_only = True, axis=1)
+
+AvgVolUS = volUS
+AvgVolUS['Avg Vol US'] = ''
+AvgVolUS['Avg Vol US'] = volUS.mean(numeric_only = True, axis=1)
+AvgVolUS = AvgVolUS.drop('Bonds Vol. Normalized', axis=1)
+
+AvgVolBR = volBR
+AvgVolBR['Avg Vol Br'] = ''
+AvgVolBR['Avg Vol BR'] = volBR.mean(numeric_only = True, axis=1)
+AvgVolBR = AvgVolBR.drop('Titulos Vol. Normalized', axis=1)
