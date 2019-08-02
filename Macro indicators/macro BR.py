@@ -30,10 +30,10 @@ x = x.reshape(-1,1)
 min_max_scaler = preprocessing.MinMaxScaler()
 x_scaled = min_max_scaler.fit_transform(x)
 
-consbrnorm = consbr
-consbrnorm['BZFGCCSA Normalized'] = ''
-consbrnorm['BZFGCCSA Normalized'] = x_scaled
-consbrnorm = consbrnorm.drop('BZFGCCSA Index', axis=1)
+confnorm = consbr
+confnorm['BZFGCCSA Normalized'] = ''
+confnorm['BZFGCCSA Normalized'] = x_scaled
+confnorm = confnorm.drop('BZFGCCSA Index', axis=1)
 
 #fetching GDP Growth in R$
 df_gr = pd.DataFrame(getdata.fetch("1207",start_date, end_date)) #for GDP in dollars, change the string to 7324
@@ -59,7 +59,54 @@ a = df_realear.values
 a = a.reshape(-1,1)
 a_scaled = min_max_scaler.fit_transform(a)
 df_realear_norm = pd.DataFrame(a_scaled, index=df_realear.index, columns=['Real Earnings Normalized'])
-print(df_gr_norm)
+
+#Merging Real Growth DataFrames#
+
+df_realgr = pd.merge(df_gr_norm,df_realear_norm, on='Date', how='outer')
+
+df_realgr = pd.merge(df_realgr,confnorm, on='Date', how='outer')
+
+#adding a column with average
+
+df_realgr["Real Growth"] = df_realgr.mean(numeric_only = True, axis=1)
+
+# VOLATILITY SERIES
+
+start_date = pd.to_datetime('01-jan-2010')
+end_date = pd.to_datetime('today')
+
+df = bbg.fetch_series(securities=['IBOV Index', 'GEBR10Y Index'],
+                      fields=['VOLATILITY_90D', 'Volatil 90D'],
+                      startdate=start_date,
+                      enddate=end_date)
+
+volIBOV_90 = pd.DataFrame(data=df['IBOV Index'])
+volIBOV_90 = volIBOV_90.droplevel('FIELD')
+volIBOV_90 = volIBOV_90.resample('Q').last()
+voltitul_90 = pd.DataFrame(data=df['GEBR10Y Index'])
+voltitul_90 = voltitul_90.droplevel('FIELD')
+voltitul_90 = voltitul_90.resample('Q').last()
+
+# Normalized series IBOV and BR Bonds (titulos)
+x = np.array(volIBOV_90['IBOV Index'])
+x = x.reshape(-1,1)
+ibovnorm = min_max_scaler.fit_transform (x)
+y = np.array(voltitul_90['GEBR10Y Index'])
+y = y.reshape(-1,1)
+titulnorm = min_max_scaler.fit_transform(y)
+volBR = volIBOV_90
+volBR['IBOV Index Normalized'] = ''
+volBR['IBOV Index Normalized'] = ibovnorm
+volBR['Titulos Vol. Normalized'] = ''
+volBR['Titulos Vol. Normalized'] = titulnorm
+volBR = volBR.drop('IBOV Index', axis=1)
+
+# Average Volatility
+
+AvgVolBR = volBR
+AvgVolBR['Avg Vol Br'] = ''
+AvgVolBR['Avg Vol BR'] = volBR.mean(numeric_only = True, axis=1)
+AvgVolBR = AvgVolBR.drop('Titulos Vol. Normalized', axis=1)
 
 #fetching IPCA
 df_cpi = pd.DataFrame(getdata.fetch("433", start_date, end_date))
@@ -103,4 +150,19 @@ df_inf = pd.merge(df_inf,df_gdpdef_norm, on='Date', how='outer')
 
 df_inf["inflation"] = df_inf.mean(numeric_only=True, axis=1)
 
-print(df_inf)
+# MERGING GROWTH, VOLATILITY AND INFLATION DATAFRAMES
+
+df_growth = df_realgr["Real Growth"]
+df_vol = AvgVolBR['Avg Vol BR']
+df_series = df_inf["inflation"]
+df_series = pd.merge(df_series, df_growth, on="Date", how="outer")
+df_series = pd.merge(df_series, df_vol, on="Date", how="outer")
+df_series = df_series.apply(zscore)
+print(df_series)
+
+# Data Classification
+
+clas_df = df_series
+clas_df['Inflation Cycle'] = np.where(clas_df['inflation']>0, "Inflationary", "Disinflationary")
+clas_df['Growth Cycle'] = np.where(clas_df['Real Growth']>0, "Boom", "Stagnation")
+clas_df['Cycle']= clas_df['Inflation Cycle'] + ' ' + clas_df['Growth Cycle']
