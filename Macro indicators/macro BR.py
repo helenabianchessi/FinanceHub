@@ -166,3 +166,11 @@ clas_df = df_series
 clas_df['Inflation Cycle'] = np.where(clas_df['inflation']>0, "Inflationary", "Disinflationary")
 clas_df['Growth Cycle'] = np.where(clas_df['Real Growth']>0, "Boom", "Stagnation")
 clas_df['Cycle']= clas_df['Inflation Cycle'] + ' ' + clas_df['Growth Cycle']
+
+clas_df['infcy'] = np.where(clas_df['inflation']>0, 1, 0)
+clas_df['cy'] = np.where(clas_df['Real Growth']>0, 2, 0)
+clas_df['cy'] = clas_df['infcy'] + clas_df['cy']
+clas_df['Cycle Change'] = clas_df['cy'].diff()
+cycle = []
+cycle = clas_df['Cycle Change'].loc[clas_df['Cycle Change'] != 0]
+print(cycle)

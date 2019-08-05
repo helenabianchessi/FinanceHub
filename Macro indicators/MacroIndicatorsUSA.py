@@ -16,14 +16,12 @@ min_max_scaler = preprocessing.MinMaxScaler()
 
 # Initial and End Dates
 
-start_date = pd.to_datetime('01-jan-1970')
+start_date = pd.to_datetime('01-jan-2000')
 end_date = pd.to_datetime('15-jun-2019')
 
-# GROWTH SERIES
+### GROWTH SERIES
 
-#fetching US Consumer Confidence
-
-# Conference Board Consumer Confidence SA 1985=100
+#fetching US Conference Board Consumer Confidence SA 1985=100
 #   Original Date: '28-fev-1967'
 
 df = bbg.fetch_series(securities=['CONCCONF Index'],
@@ -35,7 +33,6 @@ concconf = pd.DataFrame(data=df)
 concconf = concconf.droplevel(0)
 concconf = concconf.reset_index()
 concconf = concconf.set_index('TRADE_DATE')
-#concconf = concconf.rename(columns={'TRADE_DATE':'Date'})
 concconf.index.names = ['Date']
 concconf = concconf.resample('Q').mean()
 
@@ -98,7 +95,7 @@ a = a.reshape(-1,1)
 a_scaled = min_max_scaler.fit_transform(a)
 df_realear_norm = pd.DataFrame(a_scaled, index=df_realear.index, columns=['Real Earnings Normalized'])
 
-#Merging DataFrames#
+#merging DataFrames
 
 df_realgr = pd.merge(df_expectedgr_norm,df_gr_norm, on='Date', how='outer')
 
@@ -115,14 +112,14 @@ df_realgr.plot(kind='line', y='CFNAI Normalized', color='green', ax=ax)
 df_realgr.plot(kind='line', y='POTGDP Normalized', color='red', ax=ax)
 df_realgr.plot(kind='line', y='GDP Growth Normalized', color='purple', ax=ax)
 df_realgr.plot(kind='line', y='CONCCONF Normalized', color='gray', ax=ax)
-plt.show()
+#plt.show()
 
 #adding a column with average
 
 df_realgr["Real Growth"] = df_realgr.mean(numeric_only = True, axis=1)
 #print(df_realgr)
 
-# VOLATILITY SERIES
+## VOLATILITY SERIES
 
 #fetching S&P index and general US 10-year bonds volatility
 #   Original Date: '28-fev-1967'
@@ -139,7 +136,7 @@ volbonds_90 = pd.DataFrame(data=df['USGG10YR Index'])
 volbonds_90 = volbonds_90.droplevel('FIELD')
 volbonds_90 = volbonds_90.resample('Q').last()
 
-#Plot series
+#plot series
 #ax = plt.gca()
 #volSPX_90.plot(kind='line', color='blue', ax=ax)
 #volbonds_90.plot(kind='line', color='red', ax=ax)
@@ -159,13 +156,13 @@ volUS['Bonds Vol. Normalized'] = ''
 volUS['Bonds Vol. Normalized'] = bondsnorm
 volUS = volUS.drop('SPX Index', axis=1)
 
-# Plot normalized series
+#plotting normalized series
 #ax = plt.gca()
 #volUS.plot(kind='line', y='SPX Index Normalized', color='blue', ax=ax)
 #volUS.plot(kind='line', y='Bonds Vol. Normalized', color='red', ax=ax)
 #plt.show()
 
-# Average Volatility
+#average volatility
 AvgVolUS = volUS
 AvgVolUS['Avg Vol US'] = ''
 AvgVolUS['Avg Vol US'] = volUS.mean(numeric_only = True, axis=1)
@@ -173,7 +170,7 @@ AvgVolUS.index.names = ['Date']
 AvgVolUS = AvgVolUS.drop('Bonds Vol. Normalized', axis=1)
 
 
-# INFLATION SERIES
+## INFLATION SERIES
 
 #fetching CPI
 df_cpi = pd.DataFrame(getdata.fetch("CPIAUCSL", start_date, end_date))
@@ -209,7 +206,7 @@ d = d.reshape(-1, 1)
 d_scaled = min_max_scaler.fit_transform(d)
 df_gdpdef_norm = pd.DataFrame(d_scaled, index=df_gdpdef.index, columns=['GDP Deflator Normalized'])
 
-#Merging DataFrames
+#merging DataFrames
 
 df_inf = pd.merge(df_cpi_norm,df_cpigr_norm, on='Date', how='outer')
 df_inf = pd.merge(df_inf,df_gdpdef_norm, on='Date', how='outer')
@@ -219,7 +216,7 @@ df_inf = pd.merge(df_inf,df_gdpdef_norm, on='Date', how='outer')
 df_inf["inflation"] = df_inf.mean(numeric_only=True, axis=1)
 #print(df_inf)
 
-# MERGING GROWTH, VOLATILITY AND INFLATION DATAFRAMES
+## MERGING GROWTH, VOLATILITY AND INFLATION DATAFRAMES
 
 df_growth = df_realgr["Real Growth"]
 df_vol = AvgVolUS['Avg Vol US']
@@ -227,15 +224,15 @@ df_series = df_inf["inflation"]
 df_series = pd.merge(df_series, df_growth, on="Date", how="outer")
 df_series = pd.merge(df_series, df_vol, on="Date", how="outer")
 df_series = df_series.apply(zscore)
-print(df_series)
+#print(df_series)
 
-#Plotting Data Frames
+#plotting Data Frames
 ax = plt.gca()
 df_series.plot(kind='line', y='Real Growth', color='blue', ax=ax)
 df_series.plot(kind='line', y='Avg Vol US', color='green', ax=ax)
 df_series.plot(kind='line', y='inflation', color='red', ax=ax)
 plt.axhline(y=0, color='black', linestyle='-')
-plt.show()
+#plt.show()
 
 #data classification
 
